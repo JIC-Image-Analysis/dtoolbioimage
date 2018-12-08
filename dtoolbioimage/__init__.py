@@ -10,6 +10,14 @@ import numpy as np
 import dtoolcore
 
 
+def scale_to_uint8(array):
+
+    scaled = array.astype(np.float32)
+    scaled = 255 * (scaled - scaled.min()) / (scaled.max() - scaled.min())
+
+    return scaled.astype(np.uint8)
+
+
 class ImageMetadata(object):
 
     def __init__(self, metadata_dict):
@@ -25,7 +33,8 @@ class Image3D(np.ndarray):
 
         if len(self.shape) == 2:
             b = BytesIO()
-            imsave(b, self, 'PNG')
+            scaled = scale_to_uint8(self)
+            imsave(b, scaled, 'PNG')
 
             return b.getvalue()
 
