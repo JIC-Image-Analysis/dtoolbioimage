@@ -9,9 +9,14 @@ import numpy as np
 
 import dtoolcore
 
+from scipy.ndimage import zoom
+
+from dtoolbioimage.ipyutils import simple_stack_viewer
+
+from IPython.display import display
+
 
 def zoom_to_match_scales(stack):
-    from scipy.ndimage import zoom
     px = float(stack.metadata.PhysicalSizeX)
     pz = float(stack.metadata.PhysicalSizeZ)
     ratio = pz / px
@@ -39,10 +44,11 @@ def autopad(stack):
 
 def scale_to_uint8(array):
 
-    if array.max() - array.min() == 0:
+    scaled = array.astype(np.float32)
+
+    if scaled.max() - scaled.min() == 0:
         return np.zeros(array.shape, dtype=np.uint8)
 
-    scaled = array.astype(np.float32)
     scaled = 255 * (scaled - scaled.min()) / (scaled.max() - scaled.min())
 
     return scaled.astype(np.uint8)
@@ -70,6 +76,14 @@ class Image(np.ndarray):
 
 class Image3D(np.ndarray):
 
+    def _ipython_display_(self):
+
+        if len(self.shape) == 2:
+            display(self.view(Image))
+            return
+
+        display(simple_stack_viewer(self))
+
     def _repr_png_(self):
 
         if len(self.shape) == 2:
@@ -79,7 +93,7 @@ class Image3D(np.ndarray):
 
             return b.getvalue()
 
-        return self[:, :,0]._repr_png_()
+        return simple_stack_viewer(self)
 
     def save(self, fpath):
         _, ext = os.path.splitext(fpath)
