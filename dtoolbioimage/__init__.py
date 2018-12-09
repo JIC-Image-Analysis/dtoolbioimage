@@ -10,7 +10,37 @@ import numpy as np
 import dtoolcore
 
 
+def zoom_to_match_scales(stack):
+    from scipy.ndimage import zoom
+    px = float(stack.metadata.PhysicalSizeX)
+    pz = float(stack.metadata.PhysicalSizeZ)
+    ratio = pz / px
+    zoomed = zoom(stack, (1, 1, ratio))
+
+    zoomed_image = zoomed.view(Image3D)
+    zoomed_image.metadata = stack.metadata
+
+    return zoomed_image
+
+
+def autopad(stack):
+    xdim, ydim, zdim = stack.shape
+    assert(xdim == ydim)
+
+    n_pad_before = (xdim - zdim) // 2
+    n_pad_after = xdim - (n_pad_before + zdim)
+
+    zeros = np.zeros((xdim, ydim), dtype=np.uint8)
+    pad_before = np.dstack([zeros] * n_pad_before)
+    pad_after = np.dstack([zeros] * n_pad_after)
+
+    return np.dstack((pad_before, stack, pad_after))
+
+
 def scale_to_uint8(array):
+
+    if array.max() - array.min() == 0:
+        return np.zeros(array.shape, dtype=np.uint8)
 
     scaled = array.astype(np.float32)
     scaled = 255 * (scaled - scaled.min()) / (scaled.max() - scaled.min())
@@ -25,6 +55,17 @@ class ImageMetadata(object):
 
     def __getattr__(self, name):
         return self.metadata_dict[name]
+
+
+class Image(np.ndarray):
+
+     def _repr_png_(self):
+
+        b = BytesIO()
+        scaled = scale_to_uint8(self)
+        imsave(b, scaled, 'PNG')
+
+        return b.getvalue()
 
 
 class Image3D(np.ndarray):
@@ -93,7 +134,9 @@ class ImageDataSet(object):
             if len(im.shape) == 2:
                 return im
             elif len(im.shape) == 3:
-                return im[:, :, channel]
+                maxvals = list(im[:,:,c].max() for c in range(3))
+                c = maxvals.index(max(maxvals))
+                return im[:, :, c]
             else:
                 raise("Weird dimensions")
 
