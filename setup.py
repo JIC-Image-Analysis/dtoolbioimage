@@ -16,4 +16,8 @@ setup(name='dtoolbioimage',
           "ipywidgets",
           "scipy"
       ],
+      entry_points='''
+        [console_scripts]
+        convert_image_dataset=dtoolbioimage.scripts.raw_images_to_image_dataset:cli
+      ''',
       zip_safe=False)

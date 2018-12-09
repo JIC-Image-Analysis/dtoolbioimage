@@ -30,7 +30,7 @@ def proto_dataset_from_base_uri(name, base_uri):
 
 def get_image_metadata_from_raw_image(raw_image_fpath):
 
-    showinf_path = os.path.expanduser("~/packages/bftools/showinf")
+    showinf_path = "showinf"
     showinf_args = ["-nocore", "-nopix", "-novalid", "-no-upgrade", "-omexml-only"]
 
     command = [showinf_path] + showinf_args + [raw_image_fpath]
@@ -76,7 +76,7 @@ def path_to_root_name(raw_path):
 
 def run_conversion(raw_image_fpath, root_name, output_dirpath, sep):
 
-    bfconvert_path = os.path.expanduser("~/packages/bftools/bfconvert")
+    bfconvert_path = "bfconvert"
 
     Path(output_dirpath).mkdir(exist_ok=True, parents=True)
 
@@ -148,7 +148,7 @@ def raw_image_dataset_to_image_dataset(dataset, output_base_uri, output_name):
 @click.argument('dataset_uri')
 @click.argument('output_base_uri')
 @click.argument('output_name')
-def main(dataset_uri, output_base_uri, output_name):
+def cli(dataset_uri, output_base_uri, output_name):
 
     dataset = dtoolcore.DataSet.from_uri(dataset_uri)
 
@@ -160,4 +160,4 @@ def main(dataset_uri, output_base_uri, output_name):
 
 
 if __name__ == '__main__':
-    main()  # NOQA
+    cli()  # NOQA
