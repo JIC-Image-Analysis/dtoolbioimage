@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(name='dtoolbioimage',
-      version='0.1.2',
+      version='0.1.3',
       description='dtool bioimaging utilties',
       url='https://github.com/JIC-Image-Analysis/dtoolbioimage',
       author='Matthew Hartley',
@@ -18,6 +18,6 @@ setup(name='dtoolbioimage',
       ],
       entry_points='''
         [console_scripts]
-        convert_image_dataset=dtoolbioimage.scripts.raw_images_to_image_dataset:cli
+        convert_image_dataset=dtoolbioimage.convert:cli
       ''',
       zip_safe=False)

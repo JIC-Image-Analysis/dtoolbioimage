@@ -1,2 +1,3 @@
-* Demonstrate notebooks
-* Try HTTP
+* DONE Demonstrate notebooks
+* DONE Try HTTP
+* Fix nolookup
