@@ -101,7 +101,8 @@ class Image3D(np.ndarray):
 
         # We use row, col, z, but mimsave expects z, row, col
         transposed = np.transpose(self, axes=[2, 0, 1])
-        mimsave(fpath, transposed)
+        scaled = scale_to_uint8(transposed)
+        mimsave(fpath, scaled)
 
 
 
