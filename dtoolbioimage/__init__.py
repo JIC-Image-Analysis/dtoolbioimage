@@ -99,10 +99,16 @@ class Image3D(np.ndarray):
         _, ext = os.path.splitext(fpath)
         assert ext in ['.tif', '.tiff']
 
-        # We use row, col, z, but mimsave expects z, row, col
-        transposed = np.transpose(self, axes=[2, 0, 1])
-        scaled = scale_to_uint8(transposed)
-        mimsave(fpath, scaled)
+        if len(self.shape) == 3:
+            # We use row, col, z, but mimsave expects z, row, col
+            transposed = np.transpose(self, axes=[2, 0, 1])
+            scaled = scale_to_uint8(transposed)
+            mimsave(fpath, scaled)
+        elif len(self.shape) == 2:
+            scaled = scale_to_uint8(self)
+            imsave(fpath, scaled)
+        else:
+            raise ValueError("Can't save image with weird dimensions")
 
 
 
