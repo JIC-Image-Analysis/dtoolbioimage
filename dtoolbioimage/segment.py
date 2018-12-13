@@ -8,6 +8,32 @@ from imageio import mimsave, volread
 from dtoolbioimage.ipyutils import cached_segmentation_viewer
 from dtoolbioimage.util.array import pretty_color_array, unique_color_array
 
+from skimage.measure import regionprops
+
+from scipy.ndimage.morphology import binary_erosion
+
+
+def select_region(segmentation, label):
+    by_label = {r.label: r for r in regionprops(segmentation)}
+
+    rmin, cmin, zmin, rmax, cmax, zmax = by_label[label].bbox
+
+    selected = segmentation[rmin:rmax, cmin:cmax, zmin:zmax]   
+
+    return selected == label
+
+
+def spherality(region):
+    eroded = binary_erosion(region)
+    surface = region ^ eroded
+
+    S = np.sum(surface)
+    V = np.sum(region)
+
+    mult = 4.5 * np.sqrt(np.pi)
+
+    return mult * V / np.power(S, 1.5)
+
 
 class Segmentation3D(np.ndarray):
 

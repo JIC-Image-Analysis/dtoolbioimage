@@ -43,7 +43,7 @@ def cached_segmentation_viewer(stack):
 
     _, _, max_z = stack.shape
 
-    slider = IntSlider(min=0, max=max_z, step=1, description='Z plane:')
+    slider = IntSlider(min=0, max=max_z-1, step=1, description='Z plane:')
 
     png_byte_arrays = {}
 
