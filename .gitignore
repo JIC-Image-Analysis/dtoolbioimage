@@ -6,3 +6,4 @@ venv
 *.tif
 build/
 dist
+.ipynb_checkpoints/
