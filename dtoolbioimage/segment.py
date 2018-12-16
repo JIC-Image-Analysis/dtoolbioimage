@@ -79,6 +79,19 @@ class Segmentation3D(np.ndarray):
 
         return np.dstack(planes).view(Segmentation3D)
 
+    @property
+    def labels(self):
+        return set(np.unique(self)) - set([0])
+
+    def region_in_bb(self, label):
+        by_label = {r.label: r for r in regionprops(self)}
+
+        rmin, cmin, zmin, rmax, cmax, zmax = by_label[label].bbox
+
+        selected = self[rmin:rmax, cmin:cmax, zmin:zmax]
+
+        return selected == label
+
 
 def sitk_watershed_segmentation(stack):
     """Segment the given stack."""
@@ -90,7 +103,7 @@ def sitk_watershed_segmentation(stack):
     segmentation = sitk.MorphologicalWatershed(blurred, level=0.664)
     relabelled = sitk.RelabelComponent(segmentation)
 
-    return sitk.GetArrayFromImage(relabelled)
+    return sitk.GetArrayFromImage(relabelled).view(Segmentation3D)
 
 
 def filter_segmentation_by_size(segmentation):
@@ -100,4 +113,4 @@ def filter_segmentation_by_size(segmentation):
     filtered[np.where(filtered > 150)] = 0
     filtered[np.where(filtered < 3)] = 0
 
-    return filtered
+    return filtered.view(Segmentation3D)
