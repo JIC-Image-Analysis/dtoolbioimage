@@ -7,3 +7,5 @@ venv
 build/
 dist
 .ipynb_checkpoints/
+jupytervenv/
+email
