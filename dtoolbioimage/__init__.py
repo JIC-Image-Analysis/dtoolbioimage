@@ -3,7 +3,7 @@ import os
 from io import BytesIO
 from collections import defaultdict
 
-from imageio import imread, imsave, mimsave
+from imageio import imread, imsave, mimsave, volread
 
 import numpy as np
 
@@ -11,7 +11,10 @@ import dtoolcore
 
 from scipy.ndimage import zoom
 
-from dtoolbioimage.ipyutils import simple_stack_viewer
+from dtoolbioimage.ipyutils import (
+    simple_stack_viewer,
+    cached_color_stack_viewer
+)
 
 from IPython.display import display
 
@@ -69,9 +72,16 @@ class Image(np.ndarray):
 
         b = BytesIO()
         scaled = scale_to_uint8(self)
-        imsave(b, scaled, 'PNG')
+        imsave(b, scaled, 'PNG', compress_level=0)
 
         return b.getvalue()
+
+
+class ColorImage3D(np.ndarray):
+
+    def _ipython_display_(self):
+
+        display(cached_color_stack_viewer(self))
 
 
 class Image3D(np.ndarray):
@@ -110,6 +120,14 @@ class Image3D(np.ndarray):
         else:
             raise ValueError("Can't save image with weird dimensions")
 
+    @classmethod
+    def from_file(cls, fpath):
+
+        image = volread(fpath)
+
+        transposed = np.transpose(image, axes=[1, 2, 0])
+
+        return transposed.view(Image3D)
 
 
 class ImageDataSet(object):
