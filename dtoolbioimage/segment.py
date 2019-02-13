@@ -1,15 +1,22 @@
 import os
+from io import BytesIO
+
+import PIL
+from PIL import ImageDraw
+from PIL import ImageFont
 
 import numpy as np
 import SimpleITK as sitk
 
-from imageio import mimsave, volread
+from imageio import mimsave, volread, imread, imsave
 
-from dtoolbioimage import ColorImage3D
+from dtoolbioimage import ColorImage3D, Image
 from dtoolbioimage.ipyutils import cached_segmentation_viewer
 from dtoolbioimage.util.array import pretty_color_array, unique_color_array, color_array
 
 from skimage.measure import regionprops
+from skimage.morphology import dilation
+from skimage.segmentation import find_boundaries
 
 from scipy.ndimage.morphology import binary_erosion
 
@@ -75,6 +82,95 @@ def measure_by_label(segmentation, measurement_stack, l):
     return value / size
 
 
+def rprops_by_label(label_image):
+    return {r.label: r for r in regionprops(label_image)}
+
+class Segmentation(np.ndarray):
+
+    @classmethod
+    def from_file(cls, fpath):
+
+        unique_color_image = imread(fpath)
+
+        rdim, cdim, _ = unique_color_image.shape
+
+        segmentation = np.zeros((rdim, cdim), dtype=np.uint32).view(cls)
+        segmentation += unique_color_image[:,:,2]
+        segmentation += unique_color_image[:,:,1] * 256
+        segmentation += unique_color_image[:,:,0] * 256 * 256
+
+        segmentation._rprops = rprops_by_label(segmentation)
+
+        return segmentation
+
+    def _repr_png_(self):
+
+        b = BytesIO()
+        imsave(b, self.pretty_color_image, 'PNG', compress_level=0)
+
+        return b.getvalue()
+
+    @property
+    def rprops(self):
+        return self._rprops
+
+    @property
+    def pretty_color_image(self):
+
+        return pretty_color_array(self)
+
+    @property
+    def unique_color_image(self):
+
+        return unique_color_array(self)
+
+    @property
+    def centroids(self):
+        rprops = regionprops(self)
+
+        return [r.centroid for r in rprops]
+
+    @property
+    def labels(self):
+        return set(np.unique(self)) - set([0])
+
+    @property
+    def label_id_image(self):
+
+        drawimg = PIL.Image.fromarray(self.pretty_color_image)
+        d = ImageDraw.Draw(drawimg)
+        fnt = ImageFont.truetype('Microsoft Sans Serif.ttf', 20)
+
+        # Offsets
+        xo = -20
+        yo = -10
+
+        for region in regionprops(self):
+            y, x = map(int, region.centroid)
+            d.text((x+xo, y+yo), str(region.label), font=fnt, fill=(255, 255, 255))
+
+        return drawimg
+
+    def save(self, fpath, encoding='rgb'):
+
+        _, ext = os.path.splitext(fpath)
+        assert ext in ['.tif', '.tiff']
+
+        if encoding == 'rgb':
+            uci = self.unique_color_image
+
+        imsave(fpath, uci)
+
+    def find_adjacent_labels(self, label):
+        region_coords = self.rprops[label].coords
+        region_only = np.zeros(self.shape, dtype=np.uint8)
+        region_only[tuple(zip(*region_coords))] = 255
+        boundaries = find_boundaries(region_only)
+        dilated_boundaries = dilation(boundaries)
+
+        return set(self[np.where(dilated_boundaries)]) - set([label])
+
+
 class Segmentation3D(np.ndarray):
 
     def save(self, fpath, encoding='rgb'):
@@ -103,6 +199,10 @@ class Segmentation3D(np.ndarray):
         return pretty_color_array(self)
 
     def _ipython_display_(self):
+
+        if len(self.shape) == 2:
+            display(self.pretty_color_image.view(Image))
+            return
 
         display(cached_segmentation_viewer(self))
 

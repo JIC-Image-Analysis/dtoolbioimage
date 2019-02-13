@@ -68,13 +68,20 @@ class ImageMetadata(object):
 
 class Image(np.ndarray):
 
-     def _repr_png_(self):
-
+    @classmethod
+    def from_file(cls, fpath):
+        return imread(fpath).view(cls)
+    
+    def _repr_png_(self):
         b = BytesIO()
         scaled = scale_to_uint8(self)
         imsave(b, scaled, 'PNG', compress_level=0)
 
         return b.getvalue()
+
+    def save(self, fpath):
+        scaled = scale_to_uint8(self)
+        imsave(fpath, scaled)
 
 
 class ColorImage3D(np.ndarray):
@@ -139,6 +146,18 @@ class ImageDataSet(object):
 
         self.metadata = self.dataset.get_overlay('microscope_metadata')
 
+    @property
+    def name(self):
+        return self.dataset.name
+
+    @property
+    def uri(self):
+        return self.dataset.uri
+
+    @property
+    def uuid(self):
+        return self.dataset.uuid
+
     def build_index(self):
         coords_overlay = self.dataset.get_overlay("plane_coords")
 
@@ -186,6 +205,13 @@ class ImageDataSet(object):
 
         return stack
 
+    def get_single_image(self, image_name, series_name):
+
+        idn = self.planes_index[image_name][series_name][0][0]
+        image = imread(self.dataset.item_content_abspath(idn))
+
+        return image.view(Image)
+
     def get_image_names(self):
         
         return list(self.planes_index.keys())
@@ -193,3 +219,12 @@ class ImageDataSet(object):
     def get_series_names(self, image_name):
 
         return list(self.planes_index[image_name].keys())
+
+    def get_image_series_name_pairs(self):
+
+        pairs = []
+        for im_name in self.planes_index.keys():
+            for series_name in self.planes_index[im_name].keys():
+                pairs.append((im_name, series_name))
+
+        return sorted(pairs)
