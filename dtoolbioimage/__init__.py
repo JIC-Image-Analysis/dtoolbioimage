@@ -93,6 +93,25 @@ class ColorImage3D(np.ndarray):
 
 class Image3D(np.ndarray):
 
+    @classmethod
+    def from_file(cls, fpath):
+        image = volread(fpath)
+        transposed = np.transpose(image, axes=[1, 2, 0])
+        self = transposed.view(Image3D)
+        self._name = fpath
+        return self
+
+    @property
+    def name(self):
+        try:
+            return self._name
+        except AttributeError:
+            return None
+
+    @name.setter
+    def name(self, new_name):
+        self._name = new_name
+
     def _ipython_display_(self):
 
         if len(self.shape) == 2:
@@ -127,14 +146,7 @@ class Image3D(np.ndarray):
         else:
             raise ValueError("Can't save image with weird dimensions")
 
-    @classmethod
-    def from_file(cls, fpath):
 
-        image = volread(fpath)
-
-        transposed = np.transpose(image, axes=[1, 2, 0])
-
-        return transposed.view(Image3D)
 
 
 class ImageDataSet(object):
@@ -145,6 +157,11 @@ class ImageDataSet(object):
         self.build_index()
 
         self.metadata = self.dataset.get_overlay('microscope_metadata')
+
+    @classmethod
+    def from_uri(cls, uri):
+        self = cls(uri)
+        return self
 
     @property
     def name(self):
@@ -202,6 +219,10 @@ class ImageDataSet(object):
 
         stack = np.dstack(selected_planes).view(Image3D)
         stack.metadata = ImageMetadata(self.metadata[z_idns[0]])
+
+        stack.name = "{}_{}".format(image_name, series_name)
+        stack.metadata.metadata_dict["image_name"] = image_name
+        stack.metadata.metadata_dict["series_name"] = series_name
 
         return stack
 

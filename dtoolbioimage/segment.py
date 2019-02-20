@@ -137,13 +137,14 @@ class Segmentation(np.ndarray):
     @property
     def label_id_image(self):
 
+        fnt_size = 10
         drawimg = PIL.Image.fromarray(self.pretty_color_image)
         d = ImageDraw.Draw(drawimg)
-        fnt = ImageFont.truetype('Microsoft Sans Serif.ttf', 20)
+        fnt = ImageFont.truetype('Microsoft Sans Serif.ttf', fnt_size)
 
         # Offsets
-        xo = -20
-        yo = -10
+        xo = -fnt_size
+        yo = -fnt_size
 
         for region in regionprops(self):
             y, x = map(int, region.centroid)
