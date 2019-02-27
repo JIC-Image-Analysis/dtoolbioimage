@@ -18,6 +18,10 @@ def make_cross_section_view(stack):
     cslice = stack[:, cc, :]
     zslice = stack[:, :, cz]
 
+    zslice[cr,:] = 255
+    zslice[:,cc] = 255
+    cslice[:,cz] = 255
+
     rslice_t = np.transpose(rslice)
 
     secondview = np.vstack([cslice, np.zeros((zdim, zdim), dtype=cslice.dtype)])
@@ -30,7 +34,7 @@ def make_cross_section_view(stack):
 
 def make_cross_sections(image_ds):
 
-    for im, sn in image_ds.iternames():
+    for im, sn in list(image_ds.iternames())[:1]:
 
         logging.info('Generating view for {}'.format(im))
         stack = image_ds.get_stack(im, sn, channel=1)
