@@ -145,6 +145,8 @@ class ImageDataSet(object):
         self.build_index()
 
         self.metadata = self.dataset.get_overlay('microscope_metadata')
+        self.coords_overlay = self.dataset.get_overlay("plane_coords")
+
 
     @property
     def name(self):
@@ -178,6 +180,17 @@ class ImageDataSet(object):
             planes_index[image_name][series_name][channel][plane] = idn
 
         self.planes_index = planes_index
+
+    def iternames(self):
+
+        ins_sns = [
+            (image_name, series_name)
+            for image_name in self.get_image_names()
+            for series_name in self.get_series_names(image_name)
+        ]
+
+        return iter(sorted(ins_sns))
+
 
     def get_stack(self, image_name, series_name, channel=0):
 
