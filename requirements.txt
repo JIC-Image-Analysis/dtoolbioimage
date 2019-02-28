@@ -16,7 +16,6 @@ decorator==4.3.0
 defusedxml==0.5.0
 dtool-azure==0.3.1
 dtool-http==0.2.0
--e git+git@github.com:JIC-Image-Analysis/dtoolbioimage.git@ef36fc9841d4c17462a7a17774bd9de74c39a8f9#egg=dtoolbioimage
 dtoolcore==3.8.0
 entrypoints==0.2.3
 idna==2.7
