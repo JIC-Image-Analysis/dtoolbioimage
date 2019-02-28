@@ -1,5 +1,6 @@
 import os
 import re
+import logging
 import subprocess
 
 from pathlib import Path
@@ -12,20 +13,7 @@ import dtoolcore
 
 from parse import parse
 
-
-def proto_dataset_from_base_uri(name, base_uri):
-
-    admin_metadata = dtoolcore.generate_admin_metadata(name)
-    parsed_base_uri = dtoolcore.utils.generous_parse_uri(base_uri)
-
-    proto_dataset = dtoolcore.generate_proto_dataset(
-        admin_metadata=admin_metadata,
-        base_uri=dtoolcore.utils.urlunparse(parsed_base_uri)
-    )
-
-    proto_dataset.create()
-
-    return proto_dataset
+from dtoolbioimage.derived_dataset import DerivedDataSet
 
 
 def get_image_metadata_from_raw_image(raw_image_fpath):
@@ -81,11 +69,8 @@ def run_conversion(raw_image_fpath, root_name, output_dirpath, sep):
     Path(output_dirpath).mkdir(exist_ok=True, parents=True)
 
     format_string = "{}{}%n{}S%s_T%t_C%c_Z%z.png".format(root_name, sep, sep)
-
     output_format_string = os.path.join(output_dirpath, format_string)
-
     command = [bfconvert_path, raw_image_fpath, output_format_string]
-
     subprocess.call(command)
 
 
@@ -100,14 +85,16 @@ def raw_image_idns(dataset):
     return list(idn for idn in dataset.identifiers if is_microscope_image(idn))
 
 
-def convert_and_stage(raw_image_fpath, root_name, staging_path, proto_ds):
+def convert_and_stage(raw_image_fpath, root_name, staging_path, output_ds):
 
     sep = "-_-"
     run_conversion(raw_image_fpath, root_name, staging_path, sep)
 
     image_metadata_by_name = get_image_metadata_from_raw_image(raw_image_fpath)
 
-    for fn in os.listdir(staging_path):
+    to_push = os.listdir(staging_path)
+    n_items = len(to_push)
+    for n, fn in enumerate(to_push, 1):
         root_name, series_name, descriptor = fn.rsplit(sep, maxsplit=2)
         S, T, C, Z = parse("S{}_T{}_C{}_Z{}.png", descriptor)
         plane_coords = {'S': S, 'T': T, 'C': C, 'Z': Z}
@@ -116,32 +103,28 @@ def convert_and_stage(raw_image_fpath, root_name, staging_path, proto_ds):
         item_relpath = "{}/{}/{}".format(root_name, series_name, descriptor)
 
         image_metadata = image_metadata_by_name[series_name]
-        proto_ds.put_item(item_fpath, item_relpath)
-        proto_ds.add_item_metadata(item_relpath, "plane_coords", plane_coords)
-        proto_ds.add_item_metadata(item_relpath, "microscope_metadata", image_metadata)
+        logging.info('Pushing {}/{}, {}'.format(n, n_items, item_relpath))
+        output_ds.put_item(item_fpath, item_relpath)
+        output_ds.add_item_metadata(item_relpath, "plane_coords", plane_coords)
+        output_ds.add_item_metadata(item_relpath, "microscope_metadata", image_metadata)
 
 
-def convert_single_idn(dataset, idn, proto_ds):
+def convert_single_idn(dataset, idn, output_ds):
 
     with TemporaryDirectory() as tempdir:
         relpath_name = dataset.item_properties(idn)['relpath']
         root_name = path_to_root_name(relpath_name)
         raw_image_fpath = dataset.item_content_abspath(idn)
-        convert_and_stage(raw_image_fpath, root_name, tempdir, proto_ds)
+        convert_and_stage(raw_image_fpath, root_name, tempdir, output_ds)
 
 
-def raw_image_dataset_to_image_dataset(dataset, output_base_uri, output_name):
-
-    proto_ds = proto_dataset_from_base_uri(output_name, output_base_uri)
-    # output_uri = output_base_uri + '/' + output_name
-    # proto_ds = dtoolcore.ProtoDataSet.from_uri(output_uri)
+def raw_image_dataset_to_image_dataset(dataset, output_ds):
 
     microscope_image_idns = raw_image_idns(dataset)
     for idn in microscope_image_idns:
-        convert_single_idn(dataset, idn, proto_ds)
-
-    proto_ds.put_readme("")
-    proto_ds.freeze()
+        logging.info('Converting {}'.format(idn))
+        convert_single_idn(dataset, idn, output_ds)
+    logging.info('Freezing')
 
 
 @click.command()
@@ -150,13 +133,15 @@ def raw_image_dataset_to_image_dataset(dataset, output_base_uri, output_name):
 @click.argument('output_name')
 def cli(dataset_uri, output_base_uri, output_name):
 
+    logging.basicConfig(level=logging.INFO)
+
     dataset = dtoolcore.DataSet.from_uri(dataset_uri)
 
-    raw_image_dataset_to_image_dataset(
-        dataset,
-        output_base_uri,
-        output_name
-    )
+    with DerivedDataSet(output_base_uri, output_name, dataset, overwrite=True) as output_ds:
+        output_ds.readme_dict['type'] = 'image_dataset'
+        output_ds.readme_dict['converted_by'] = 'dtoolbioimage.convert'
+
+        raw_image_dataset_to_image_dataset(dataset, output_ds)
 
 
 if __name__ == '__main__':
