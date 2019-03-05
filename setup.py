@@ -8,7 +8,6 @@ setup(name='dtoolbioimage',
       author='Matthew Hartley',
       author_email='Matthew.Hartley@jic.ac.uk',
       license='MIT',
-      packages=['dtoolbioimage'],
       install_requires=[
 	  "click",
 	  "parse",
