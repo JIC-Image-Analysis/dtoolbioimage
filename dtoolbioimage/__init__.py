@@ -185,16 +185,25 @@ class ImageDataSet(object):
             image_name, series_name, _ = relpath.split('/')
             channel = int(coords_overlay[idn]['C'])
             plane = int(coords_overlay[idn]['Z'])
+            series_index = int(coords_overlay[idn]['S'])
 
-            return image_name, series_name, channel, plane, idn
+            return image_name, series_name, series_index, channel, plane, idn
 
         specifiers = map(specifier_tuple, self.dataset.identifiers)
 
-        # Nested dictionary of dictionaries (x4)
-        planes_index = defaultdict(lambda: defaultdict(
-            lambda: defaultdict(lambda: defaultdict(list))))
-        for image_name, series_name, channel, plane, idn in specifiers:
-            planes_index[image_name][series_name][channel][plane] = idn
+        # Nested dictionary of dictionaries (x5)
+        planes_index = defaultdict(
+            lambda: defaultdict(
+                lambda: defaultdict(
+                    lambda: defaultdict(
+                        lambda: defaultdict(list)
+                    )
+                )
+            )
+        )
+
+        for image_name, series_name, series_index, channel, plane, idn in specifiers:
+            planes_index[image_name][series_name][series_index][channel][plane] = idn
 
         self.planes_index = planes_index
 
@@ -208,10 +217,19 @@ class ImageDataSet(object):
 
         return iter(sorted(ins_sns))
 
+    def get_n_series(self, image_name, series_name):
 
-    def get_stack(self, image_name, series_name, channel=0):
+        series_indices = list(self.planes_index[image_name][series_name].keys())
 
-        z_idns = self.planes_index[image_name][series_name][channel]
+        return len(series_indices)
+
+    def get_stack(self, image_name, series_name, series_idx=0, channel=0):
+
+        series_indices = list(self.planes_index[image_name][series_name].keys())
+        remapped = dict(enumerate(series_indices))
+        series_index = remapped[series_idx]
+
+        z_idns = self.planes_index[image_name][series_name][series_index][channel]
 
         images = [
             imread(self.dataset.item_content_abspath(z_idns[z]))
@@ -262,3 +280,13 @@ class ImageDataSet(object):
                 pairs.append((im_name, series_name))
 
         return sorted(pairs)
+
+    def all_possible_stack_tuples(self):
+
+        tuples = []
+        for im_name in self.planes_index.keys():
+            for series_name in self.planes_index[im_name].keys():
+                for n in range(self.get_n_series(im_name, series_name)):
+                    tuples.append((im_name, series_name, n))
+
+        return sorted(tuples)
