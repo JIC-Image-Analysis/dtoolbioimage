@@ -244,15 +244,18 @@ class Segmentation3D(np.ndarray):
 
         return color_array(self, palette).view(ColorImage3D)
 
+    def __len__(self):
+        return len(self.labels)
 
-def sitk_watershed_segmentation(stack):
+
+def sitk_watershed_segmentation(stack, level=0.664):
     """Segment the given stack."""
 
     itk_im = sitk.GetImageFromArray(stack)
     median_filtered = sitk.Median(itk_im)
     grad_mag = sitk.GradientMagnitude(median_filtered)
     blurred = sitk.DiscreteGaussian(grad_mag, 2.0)
-    segmentation = sitk.MorphologicalWatershed(blurred, level=0.664)
+    segmentation = sitk.MorphologicalWatershed(blurred, level)
     relabelled = sitk.RelabelComponent(segmentation)
 
     return sitk.GetArrayFromImage(relabelled).view(Segmentation3D)

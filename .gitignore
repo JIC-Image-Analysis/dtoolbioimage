@@ -9,3 +9,4 @@ dist
 .ipynb_checkpoints/
 jupytervenv/
 email
+*.pyc
