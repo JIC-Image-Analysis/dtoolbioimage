@@ -10,3 +10,4 @@ dist
 jupytervenv/
 email
 *.pyc
+*.ipynb
