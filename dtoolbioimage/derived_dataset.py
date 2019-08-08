@@ -50,8 +50,6 @@ class DerivedDataSet(object):
             self.readme_dict['source_ds_uri'] = source_ds.uri
             self.readme_dict['source_ds_uuid'] = source_ds.uuid
 
-
-
     def __enter__(self):
 
         self.tmpdir = Path(tempfile.mkdtemp())
@@ -97,4 +95,7 @@ class DerivedDataSet(object):
     def add_item_metadata(self, relpath, key, value):
         self.proto_dataset.add_item_metadata(relpath, key, value)
 
-        
+
+    @property
+    def uri(self):
+        return self.proto_dataset.uri
