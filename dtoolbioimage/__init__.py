@@ -114,6 +114,10 @@ class Image3D(np.ndarray):
 
     def _ipython_display_(self):
 
+        if np.ndim(self) == 0:
+            display(self)
+            return
+
         if len(self.shape) == 2:
             display(self.view(Image))
             return

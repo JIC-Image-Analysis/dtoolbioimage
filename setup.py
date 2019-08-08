@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(name='dtoolbioimage',
-      version='0.1.7',
+      version='0.1.8',
       description='dtool bioimaging utilties',
       packages=['dtoolbioimage', 'dtoolbioimage.util'],
       url='https://github.com/JIC-Image-Analysis/dtoolbioimage',
