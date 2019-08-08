@@ -1,5 +1,6 @@
 import os
 import re
+import sys
 import logging
 import subprocess
 
@@ -65,13 +66,20 @@ def path_to_root_name(raw_path):
 def run_conversion(raw_image_fpath, root_name, output_dirpath, sep):
 
     bfconvert_path = "bfconvert"
+    bfconvert_args = ["-no-upgrade", "-nolookup"]
 
     Path(output_dirpath).mkdir(exist_ok=True, parents=True)
 
     format_string = "{}{}%n{}S%s_T%t_C%c_Z%z.png".format(root_name, sep, sep)
     output_format_string = os.path.join(output_dirpath, format_string)
-    command = [bfconvert_path, raw_image_fpath, output_format_string]
-    subprocess.call(command)
+
+    command = [bfconvert_path] + bfconvert_args + [raw_image_fpath, output_format_string]
+
+    try:
+        subprocess.call(command)
+    except FileNotFoundError:
+        sys.stderr.write("ERROR: Can't run bfconvert - is it installed and in the PATH?\n")
+        raise
 
 
 def raw_image_idns(dataset):
