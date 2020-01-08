@@ -85,6 +85,7 @@ def measure_by_label(segmentation, measurement_stack, l):
 def rprops_by_label(label_image):
     return {r.label: r for r in regionprops(label_image)}
 
+
 class Segmentation(np.ndarray):
 
     @classmethod
@@ -99,6 +100,13 @@ class Segmentation(np.ndarray):
         segmentation += unique_color_image[:,:,1] * 256
         segmentation += unique_color_image[:,:,0] * 256 * 256
 
+        segmentation._rprops = rprops_by_label(segmentation)
+
+        return segmentation
+
+    @classmethod
+    def from_array(cls, array):
+        segmentation = array.view(cls)
         segmentation._rprops = rprops_by_label(segmentation)
 
         return segmentation
