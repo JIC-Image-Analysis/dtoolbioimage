@@ -6,9 +6,12 @@ from dtoolbioimage import ImageDataSet
 def show_summary(image_dataset):
 
     def get_dimension_data(entry):
-        im_name, s_name, sidx = entry
+        im_name, s_name, series_index = entry
         series = image_dataset.planes_index[im_name][s_name].keys()
         n_series = len(image_dataset.planes_index[im_name][s_name])
+        series_indices = list(image_dataset.planes_index[im_name][s_name].keys())
+        remapped = dict(enumerate(series_indices))
+        sidx = remapped[series_index]
         channels = image_dataset.planes_index[im_name][s_name][sidx].keys()
         n_channels = len(channels)
         n_planes = len(image_dataset.planes_index[im_name][s_name][sidx][0])
