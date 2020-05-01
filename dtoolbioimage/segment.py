@@ -163,12 +163,16 @@ class Segmentation(np.ndarray):
     def save(self, fpath, encoding='rgb'):
 
         _, ext = os.path.splitext(fpath)
-        assert ext in ['.tif', '.tiff']
 
         if encoding == 'rgb':
+            assert ext in ['.tif', '.tiff', '.png']
             uci = self.unique_color_image
-
-        imsave(fpath, uci)
+            imsave(fpath, uci)
+        elif encoding == '32bit':
+            assert ext in ['.tif', '.tiff']
+            imsave(fpath, self)
+        else:
+            raise ValueError('Unknown encoding: {}'.format(encoding))
 
     def find_adjacent_labels(self, label):
         region_coords = self.rprops[label].coords

@@ -57,6 +57,18 @@ def scale_to_uint8(array):
     return scaled.astype(np.uint8)
 
 
+def scale_to_float32(array):
+
+    scaled = array.astype(np.float32)
+
+    if scaled.max() - scaled.min() == 0:
+        return np.zeros(array.shape, dtype=np.float32)
+
+    scaled = (scaled - scaled.min()) / (scaled.max() - scaled.min())
+
+    return scaled
+
+
 class ImageMetadata(object):
 
     def __init__(self, metadata_dict):
@@ -294,3 +306,11 @@ class ImageDataSet(object):
                     tuples.append((im_name, series_name, n))
 
         return sorted(tuples)
+
+    def iter_stack_tuples(self):
+        for image_name in self.planes_index.keys():
+            for series_name in self.planes_index[image_name].keys():
+                raw_series_indices = self.planes_index[image_name][series_name].keys()
+                for (n, series_index) in enumerate(raw_series_indices):
+                    for channel in self.planes_index[image_name][series_name][series_index].keys():
+                        yield (image_name, series_name, n, channel)
