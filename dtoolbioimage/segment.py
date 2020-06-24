@@ -132,6 +132,10 @@ class Segmentation(np.ndarray):
 
         return unique_color_array(self)
 
+    def centroid_int(self, label):
+        r_float, c_float = self.rprops[label].centroid
+        return int(r_float), int(c_float)
+
     @property
     def centroids(self):
         rprops = regionprops(self)
