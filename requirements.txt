@@ -16,7 +16,7 @@ decorator==4.3.0
 defusedxml==0.5.0
 dtool-azure==0.3.1
 dtool-http==0.2.0
--e git+git@github.com:JIC-Image-Analysis/dtoolbioimage.git@6001d4b92399cb54264fb92a8fcb8d59b18ac1fd#egg=dtoolbioimage
+-e git+git@github.com:JIC-Image-Analysis/dtoolbioimage.git@0181b8da3fa83dcaacbe0b13f8de77803b0817fe#egg=dtoolbioimage
 dtoolcore==3.8.0
 entrypoints==0.2.3
 idna==2.7
@@ -27,17 +27,17 @@ ipython-genutils==0.2.0
 ipywidgets==7.4.2
 isort==4.3.4
 jedi==0.13.1
-Jinja2==2.10
+Jinja2==2.11.2
 jsonschema==2.6.0
-jupyter-client==5.2.3
-jupyter-core==4.4.0
+jupyter-client==6.1.6
+jupyter-core==4.6.3
 lazy-object-proxy==1.3.1
 MarkupSafe==1.1.0
 mccabe==0.6.1
 mistune==0.8.4
 nbconvert==5.4.0
 nbformat==4.4.0
-notebook==5.7.2
+notebook==6.0.3
 numpy==1.15.4
 packaging==20.4
 pandocfilters==1.4.2
@@ -67,7 +67,7 @@ tifffile==2018.11.28
 tornado==5.1.1
 traitlets==4.3.2
 typed-ast==1.1.0
-urllib3==1.24.1
+urllib3==1.25.9
 wcwidth==0.1.7
 webencodings==0.5.1
 widgetsnbextension==3.4.2
